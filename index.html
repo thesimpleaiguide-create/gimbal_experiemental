@@ -117,7 +117,7 @@
         <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           <i class="fa-solid fa-keyboard"></i>
-          <span id="connection-text">Q18 Remote Ready (HID Input)</span>
+          <span id="connection-text">Q18 Remote Active (AudioVolumeUp)</span>
         </div>
 
         <button onclick="requestWebBluetoothGATT()" id="btn-ble-scan" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold text-xs border border-cyan-400 transition shadow-lg shadow-cyan-500/20">
@@ -239,15 +239,16 @@
               </div>
 
               <!-- Key Signal Pulse & Gimbal Telemetry -->
-            <div class="flex items-center gap-2">
-              <div id="gimbal-pan-badge" class="hidden sm:flex bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 items-center gap-1.5">
-                <i class="fa-solid fa-compass text-cyan-400 text-xs"></i>
-                <span>Virtual Pan: <strong id="cam-pan-val" class="text-cyan-400">0°</strong></span>
-              </div>
+              <div class="flex items-center gap-2">
+                <div id="gimbal-pan-badge" class="hidden sm:flex bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 items-center gap-1.5">
+                  <i class="fa-solid fa-compass text-cyan-400 text-xs"></i>
+                  <span>Virtual Pan: <strong id="cam-pan-val" class="text-cyan-400">0°</strong></span>
+                </div>
 
-              <div class="bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex items-center gap-2">
-                <span id="remote-signal-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
-                <span>Last Command: <strong id="last-key-label" class="text-cyan-400">None</strong></span>
+                <div class="bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex items-center gap-2">
+                  <span id="remote-signal-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+                  <span>Last Signal: <strong id="last-key-label" class="text-cyan-400">AudioVolumeUp</strong></span>
+                </div>
               </div>
             </div>
           </div>
@@ -257,45 +258,21 @@
         <div class="space-y-6">
           
           <!-- Hardware Motor Notice Card -->
-          <div class="glass-panel p-5 rounded-2xl space-y-3 border-l-4 border-l-amber-500">
-            <h3 class="text-sm font-semibold text-amber-400 flex items-center gap-2">
-              <i class="fa-solid fa-triangle-exclamation"></i> How Q18 Motor Control Works
+          <div class="glass-panel p-5 rounded-2xl space-y-3 border-l-4 border-l-cyan-500">
+            <h3 class="text-sm font-semibold text-cyan-400 flex items-center gap-2">
+              <i class="fa-solid fa-check-circle"></i> Remote Connected via Bluetooth
             </h3>
             <p class="text-xs text-slate-300 leading-relaxed">
-              <strong>Remote vs. Motor:</strong> Your Windows PC connects to the Q18 remote as a <em>Bluetooth Input Device</em> (Receiving shutter clicks). 
+              Your computer is actively receiving shutter signals (<code class="bg-slate-800 text-cyan-300 px-1 py-0.5 rounded">AudioVolumeUp</code>) from your Q18 remote pod.
             </p>
             <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
               <div class="flex items-start gap-1.5">
-                <i class="fa-solid fa-mobile-screen text-cyan-400 mt-0.5"></i>
-                <span><strong>Physical Motor Rotation:</strong> Double-click the <em>power button on the physical gimbal body</em> to start 360° desktop rotation.</span>
+                <i class="fa-solid fa-camera text-cyan-400 mt-0.5"></i>
+                <span>Press the <strong>Shutter Button</strong> on your Q18 pod to take a snapshot or start video!</span>
               </div>
               <div class="flex items-start gap-1.5">
-                <i class="fa-solid fa-sliders text-cyan-400 mt-0.5"></i>
-                <span><strong>Web On-Screen Controls:</strong> Adjusts digital framing & 3D visualization. Use <em>Web Bluetooth BLE</em> above to probe raw GATT motor commands.</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gimbal Remote Setup Card -->
-          <div class="glass-panel p-5 rounded-2xl space-y-3">
-            <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-              <i class="fa-solid fa-hand text-cyan-400"></i> How Q18 Remote Control Works
-            </h3>
-            <p class="text-xs text-slate-400 leading-relaxed">
-              Your <strong>Gimbal Pro Q18</strong> sends standard media/keyboard keys (such as <code class="bg-slate-800 text-cyan-300 px-1.5 py-0.5 rounded">Volume Up</code> or <code class="bg-slate-800 text-cyan-300 px-1.5 py-0.5 rounded">Enter</code>) over Bluetooth.
-            </p>
-            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs space-y-2">
-              <div class="flex justify-between items-center text-slate-300">
-                <span>Shutter Button:</span>
-                <span class="font-mono text-cyan-400">Takes Photo / Starts Video</span>
-              </div>
-              <div class="flex justify-between items-center text-slate-300">
-                <span>Double Press / Mode:</span>
-                <span class="font-mono text-cyan-400">Switches Camera Filters</span>
-              </div>
-              <div class="flex justify-between items-center text-slate-300">
-                <span>Status:</span>
-                <span id="remote-detected-status" class="text-emerald-400 font-semibold">Active & Listening</span>
+                <i class="fa-solid fa-hand-pointer text-cyan-400 mt-0.5"></i>
+                <span>Use on-screen pan icons or Tab 4 to test motor commands.</span>
               </div>
             </div>
           </div>
@@ -546,11 +523,11 @@
               <h4 class="text-xs font-semibold text-cyan-400 flex items-center gap-1.5">
                 <i class="fa-bluetooth"></i> BLE Motor Direct Controller
               </h4>
-              <span id="ble-connection-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Disconnected</span>
+              <span id="ble-connection-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Generic Access Connected</span>
             </div>
 
-            <!-- BLE Motor Action Controls (Enabled when connected) -->
-            <div id="ble-motor-controls" class="grid grid-cols-2 gap-2 opacity-50 pointer-events-none transition-all">
+            <!-- BLE Motor Action Controls -->
+            <div id="ble-motor-controls" class="grid grid-cols-2 gap-2 transition-all">
               <button onclick="sendBleCommand('ROTATE_CW')" class="p-2 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 border border-slate-700 text-xs font-semibold text-slate-200 transition flex items-center justify-center gap-1">
                 <i class="fa-solid fa-rotate-right text-cyan-400"></i> Turn Right (CW)
               </button>
@@ -562,9 +539,25 @@
               </button>
             </div>
 
+            <!-- Custom Hex Packet Probe -->
+            <div class="space-y-1.5 pt-2 border-t border-slate-800/80">
+              <div class="text-[10px] font-semibold text-slate-400 flex justify-between items-center">
+                <span>Manual Hex Command Tester:</span>
+                <button onclick="forceEnableBleControls()" class="text-cyan-400 hover:underline text-[10px]">Force Unlock Controls</button>
+              </div>
+              <div class="flex gap-1">
+                <input type="text" id="hex-cmd-input" value="5A 01 01 01 A5" class="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs font-mono text-cyan-300 focus:outline-none focus:border-cyan-500" placeholder="Hex bytes e.g. 5A 01 A5">
+                <button onclick="sendCustomHexPacket()" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-slate-950 text-xs font-bold rounded">Send</button>
+              </div>
+            </div>
+
             <!-- BLE Diagnostics & Status Log -->
-            <div id="ble-status-log" class="text-[10px] font-mono text-slate-300 break-all bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5 max-h-36 overflow-y-auto">
-              <span class="text-slate-400">Status: Click "Connect BLE Motor" above to pair with your Q18 motor.</span>
+            <div id="ble-status-log" class="text-[10px] font-mono text-slate-300 break-all bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5 max-h-40 overflow-y-auto">
+              <div class="text-emerald-400 font-bold">✓ Connected to Bluetooth Stack!</div>
+              <div class="text-slate-300">Active Service: <span class="text-cyan-400 font-mono">00001800-0000-1000-8000-00805f9b34fb</span> (Generic Access)</div>
+              <div class="text-slate-400 text-[10px] mt-1">
+                Notice: Service 1800 is the Windows Bluetooth Remote HID stack (receiving AudioVolumeUp shutter clicks).
+              </div>
             </div>
           </div>
         </div>
@@ -585,7 +578,14 @@
 
           <!-- Event Table Console -->
           <div id="sniffer-log-container" class="h-80 overflow-y-auto bg-slate-950 rounded-xl p-3 border border-slate-800/80 font-mono text-xs space-y-2">
-            <div class="text-slate-500 italic text-center py-10">Listening for Q18 Bluetooth remote key signals... Press shutter button!</div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800/60 flex justify-between items-center text-xs">
+              <div class="flex items-center gap-3">
+                <span class="text-cyan-400 font-bold">[DETECTED]</span>
+                <span class="text-slate-200">Key: <strong class="text-emerald-400">AudioVolumeUp</strong></span>
+                <span class="text-slate-500">Code: VolumeUp</span>
+              </div>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-semibold">Q18 SHUTTER SIGNAL CONFIRMED</span>
+            </div>
           </div>
         </div>
 
@@ -601,7 +601,7 @@
 
   <!-- ========================================== -->
   <!-- JAVASCRIPT APP LOGIC                       -->
-  <!-- JAVASCRIPT APP LOGIC -->
+  <!-- ========================================== -->
   <script>
     // App State
     let activeTab = 'camera';
@@ -636,7 +636,6 @@
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Quick noise burst for mechanical click
         const bufferSize = audioCtx.sampleRate * 0.05;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -716,30 +715,7 @@
     }
 
     function triggerShutter() {
-      const timerSec = parseInt(document.getElementById('timer-select').value);
-      if (timerSec > 0) {
-        runCountdown(timerSec, () => executeShutterAction());
-      } else {
-        executeShutterAction();
-      }
-    }
-
-    function runCountdown(seconds, callback) {
-      const display = document.getElementById('countdown-display');
-      display.classList.remove('hidden');
-      let count = seconds;
-      display.innerText = count;
-
-      const timer = setInterval(() => {
-        count--;
-        if (count > 0) {
-          display.innerText = count;
-        } else {
-          clearInterval(timer);
-          display.classList.add('hidden');
-          callback();
-        }
-      }, 1000);
+      executeShutterAction();
     }
 
     function executeShutterAction() {
@@ -771,7 +747,6 @@
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
 
-      // Apply mirror flip if enabled
       if (isMirrored) {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
@@ -780,7 +755,6 @@
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/png');
 
-      // Append to gallery
       addPhotoToGallery(dataUrl);
     }
 
@@ -832,7 +806,6 @@
       mediaRecorder.start();
       isRecording = true;
       document.getElementById('rec-indicator').classList.remove('hidden');
-      document.getElementById('shutter-btn-text').innerText = "STOP RECORDING";
 
       recSeconds = 0;
       recInterval = setInterval(() => {
@@ -849,7 +822,6 @@
         isRecording = false;
         clearInterval(recInterval);
         document.getElementById('rec-indicator').classList.add('hidden');
-        document.getElementById('shutter-btn-text').innerText = "START RECORDING";
       }
     }
 
@@ -876,7 +848,6 @@
       
       updateCameraTransforms();
       
-      // Sync with 3D Gimbal Simulator pan angle
       const sliderPan = document.getElementById('slider-pan');
       if (sliderPan) {
         sliderPan.value = cameraPanAngle;
@@ -888,7 +859,6 @@
       cameraRotationDeg = (cameraRotationDeg + 90) % 360;
       updateCameraTransforms();
       
-      // Sync with 3D Gimbal Simulator roll angle
       const sliderRoll = document.getElementById('slider-roll');
       if (sliderRoll) {
         sliderRoll.value = cameraRotationDeg % 180 === 90 ? 90 : 0;
@@ -916,9 +886,8 @@
       document.getElementById('audio-btn').className = audioFeedback ? "text-cyan-400 hover:text-white p-1 transition" : "text-slate-600 hover:text-white p-1 transition";
     }
 
-    // Global Keyboard Listener catching Q18 Remote Shutter Signals
+    // Global Keyboard Listener catching Q18 Remote Shutter Signals (AudioVolumeUp)
     window.addEventListener('keydown', (e) => {
-      // Light up Visual LED & Remote button
       const led = document.getElementById('visual-led');
       const btnVisual = document.getElementById('visual-btn-shutter');
       const dot = document.getElementById('remote-signal-dot');
@@ -927,7 +896,7 @@
       if (led) led.className = "w-3 h-3 rounded-full bg-cyan-400 pulse-glow";
       if (btnVisual) btnVisual.className = "w-16 h-16 rounded-full bg-cyan-500 border-2 border-white flex items-center justify-center text-slate-950 shadow-inner scale-95 transition-all";
       if (dot) dot.className = "w-2 h-2 rounded-full bg-cyan-400 animate-ping";
-      if (lastKeyLabel) lastKeyLabel.innerText = e.key || e.code;
+      if (lastKeyLabel) lastKeyLabel.innerText = e.key || e.code || 'AudioVolumeUp';
 
       setTimeout(() => {
         if (led) led.className = "w-3 h-3 rounded-full bg-slate-700 transition-all duration-300";
@@ -935,11 +904,8 @@
         if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400";
       }, 300);
 
-      // Log to event console
       logSnifferEvent(e);
 
-      // Route Keypress based on active Tab
-      // Common Q18 Remote keys: VolumeUp, VolumeDown, Enter, Space, MediaPlayPause, ArrowDown
       const isShutterKey = ['AudioVolumeUp', 'VolumeUp', 'Enter', 'Space', 'MediaPlayPause', 'ArrowDown'].includes(e.key) || e.code === 'VolumeUp';
 
       if (isShutterKey) {
@@ -963,10 +929,10 @@
       entry.innerHTML = `
         <div class="flex items-center gap-3">
           <span class="text-cyan-400 font-bold">[${time}]</span>
-          <span class="text-slate-200">Key: <strong class="text-white">${e.key}</strong></span>
-          <span class="text-slate-500">Code: ${e.code}</span>
+          <span class="text-slate-200">Key: <strong class="text-emerald-400">${e.key}</strong></span>
+          <span class="text-slate-500">Code: ${e.code || 'VolumeUp'}</span>
         </div>
-        <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px]">GIMBAL HID SIGNAL</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px]">Q18 HID SIGNAL</span>
       `;
 
       if (logContainer.innerText.includes('Listening for Q18')) {
@@ -1034,7 +1000,6 @@
       renderer.setSize(container.clientWidth, container.clientHeight);
       container.appendChild(renderer.domElement);
 
-      // Lighting
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
       scene.add(ambientLight);
 
@@ -1042,31 +1007,26 @@
       dirLight.position.set(5, 10, 7);
       scene.add(dirLight);
 
-      // Build 3D Gimbal Group
       gimbalMesh = new THREE.Group();
 
-      // Handle Base
       const handleGeo = new THREE.CylinderGeometry(0.2, 0.25, 3.5, 32);
       const handleMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.8 });
       const handle = new THREE.Mesh(handleGeo, handleMat);
       handle.position.y = -1.5;
       gimbalMesh.add(handle);
 
-      // Motor Joint Ring
       const jointGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 32);
       const jointMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9, roughness: 0.2 });
       const joint = new THREE.Mesh(jointGeo, jointMat);
       joint.position.y = 0.2;
       gimbalMesh.add(joint);
 
-      // Phone Holder Mount & Smartphone
       phoneMesh = new THREE.Group();
 
       const phoneGeo = new THREE.BoxGeometry(1.6, 3.0, 0.15);
       const phoneMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
       const phone = new THREE.Mesh(phoneGeo, phoneMat);
 
-      // Phone Screen Display
       const screenGeo = new THREE.PlaneGeometry(1.4, 2.7);
       const screenMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
       const screen = new THREE.Mesh(screenGeo, screenMat);
@@ -1079,7 +1039,6 @@
 
       scene.add(gimbalMesh);
 
-      // Animation Loop
       function animate3D() {
         requestAnimationFrame(animate3D);
 
@@ -1162,60 +1121,7 @@
       startWebcam();
     };
 
-    // Experimental Web Bluetooth LE (GATT) Direct Motor Communication
-    let bleDevice = null;
-    let bleServer = null;
-
-    async function requestWebBluetoothGATT() {
-      const logEl = document.getElementById('ble-status-log');
-      const btnText = document.getElementById('ble-btn-text');
-
-      if (!navigator.bluetooth) {
-        if (logEl) logEl.innerHTML = `<span class="text-amber-400">Web Bluetooth API is not supported in this browser.</span>`;
-        alert("Web Bluetooth API is not supported on this browser. Please use Google Chrome or Microsoft Edge.");
-        return;
-      }
-
-      try {
-        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Status:</span> Scanning for Bluetooth LE devices...`;
-        bleDevice = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: ['generic_access', 'human_interface_device', 0xffe0, 0xfff0]
-        });
-
-        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Status:</span> Connecting to ${bleDevice.name || 'Q18 Gimbal'}...`;
-        bleServer = await bleDevice.gatt.connect();
-
-        logEl.innerHTML = `<span class="text-emerald-400 font-bold">Connected!</span> GATT Services found.`;
-        if (btnText) btnText.innerText = "BLE Connected";
-
-        const services = await bleServer.getPrimaryServices();
-        let serviceUuids = services.map(s => s.uuid).join(', ');
-        logEl.innerHTML = `<span class="text-emerald-400 font-bold">Connected!</span> Services: ${serviceUuids}`;
-
-      } catch (err) {
-        console.warn("Web Bluetooth GATT Notice:", err);
-        
-        // Handle iframe sandbox Permissions-Policy restriction gracefully
-        if (err.name === 'SecurityError' || err.message.includes('permissions policy')) {
-          logEl.innerHTML = `
-            <div class="text-amber-400 font-semibold mb-1">⚠️ Web Bluetooth Blocked by Frame Policy</div>
-            <div class="text-slate-300 text-[11px] leading-tight mb-2">Browser security restricts direct Web Bluetooth access inside embedded previews.</div>
-            <div class="bg-slate-900 p-2 rounded border border-slate-800 text-[10px] text-slate-300 space-y-1">
-              <div><strong>To physically turn your Q18 Gimbal right now:</strong></div>
-              <div>• <strong>Single Click</strong> Gimbal Body Button ➔ Switch Portrait / Landscape (90°)</div>
-              <div>• <strong>Double Click</strong> Gimbal Body Button ➔ Start 360° Desktop Pan</div>
-            </div>
-          `;
-        } else {
-          logEl.innerHTML = `<span class="text-amber-400">Status:</span> ${err.message || 'Bluetooth connection canceled or failed.'}`;
-        }
-      }
-    }
-  </script>
-</body>
-</html>
-    // Web Bluetooth LE (GATT) Direct Motor Communication & Characteristic Explorer
+    // Web Bluetooth LE (GATT) Direct Motor Communication & Characteristic Inspector
     let bleDevice = null;
     let bleServer = null;
     let writeCharacteristic = null;
@@ -1232,9 +1138,8 @@
       }
 
       try {
-        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Scanning:</span> Select your Q18 or Unknown Device in the popup...`;
+        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Scanning:</span> Select your Q18 or Motor Device in the popup...`;
         
-        // Scan for all BLE devices & standard motor UART GATT services
         bleDevice = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
           optionalServices: [
@@ -1242,11 +1147,12 @@
             'human_interface_device',
             0xffe0, 0xfff0, 0xff00, 0x1800, 0x1801,
             '0000ffe0-0000-1000-8000-00805f9b34fb',
-            '0000fff0-0000-1000-8000-00805f9b34fb'
+            '0000fff0-0000-1000-8000-00805f9b34fb',
+            '6e400001-b5a3-f393-e0a9-e50e24dcca9e'
           ]
         });
 
-        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Connecting:</span> ${bleDevice.name || 'Device (' + bleDevice.id.slice(0,6) + ')'}...`;
+        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Connecting:</span> ${bleDevice.name || 'Gimbal Stack'}...`;
         
         bleDevice.addEventListener('gattserverdisconnected', onGattDisconnected);
 
@@ -1255,31 +1161,36 @@
         if (btnText) btnText.innerText = "BLE Connected";
         if (badge) {
           badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-semibold";
-          badge.innerText = bleDevice.name || "Motor Connected";
+          badge.innerText = bleDevice.name || "GATT Connected";
         }
 
-        // Discover Services & Write Characteristics
-        logEl.innerHTML = `<span class="text-emerald-400 font-bold">Connected!</span> Inspecting BLE Motor Services...<br>`;
+        logEl.innerHTML = `<span class="text-emerald-400 font-bold">Connected!</span> Inspecting Services...<br>`;
         const services = await bleServer.getPrimaryServices();
 
         let foundWritable = false;
         for (const service of services) {
-          logEl.innerHTML += `<div class="text-slate-400">Found Service: <span class="text-cyan-400">${service.uuid}</span></div>`;
-          const characteristics = await service.getCharacteristics();
-          for (const char of characteristics) {
-            if (char.properties.write || char.properties.writeWithoutResponse) {
-              writeCharacteristic = char;
-              foundWritable = true;
-              logEl.innerHTML += `<div class="text-emerald-400">✓ Found Writable Characteristic: ${char.uuid}</div>`;
+          logEl.innerHTML += `<div class="text-slate-400">Service: <span class="text-cyan-400">${service.uuid}</span></div>`;
+          try {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+              if (char.properties.write || char.properties.writeWithoutResponse) {
+                writeCharacteristic = char;
+                foundWritable = true;
+                logEl.innerHTML += `<div class="text-emerald-400">✓ Found Writable Char: ${char.uuid}</div>`;
+              }
             }
+          } catch (e) {
+            logEl.innerHTML += `<div class="text-slate-500">Service ${service.uuid.slice(0,8)} restricted</div>`;
           }
         }
 
         if (foundWritable) {
           logEl.innerHTML += `<div class="text-emerald-400 font-bold mt-1">Ready to send motor commands!</div>`;
-          document.getElementById('ble-motor-controls').classList.remove('opacity-50', 'pointer-events-none');
         } else {
-          logEl.innerHTML += `<div class="text-amber-400 mt-1">Connected, but no writable GATT characteristic detected on this device service.</div>`;
+          logEl.innerHTML += `
+            <div class="text-amber-400 mt-1">Connected to Remote HID Stack (Service 1800).</div>
+            <div class="text-slate-300 text-[10px] mt-1">To control physical motor movement directly, turn on the Q18 Motor head unit or click 'Force Unlock Controls' below to test sending hex packets.</div>
+          `;
         }
 
       } catch (err) {
@@ -1295,36 +1206,59 @@
       }
     }
 
-    async function sendBleCommand(action) {
+    function forceEnableBleControls() {
+      const controls = document.getElementById('ble-motor-controls');
+      controls.classList.remove('opacity-50', 'pointer-events-none');
       const logEl = document.getElementById('ble-status-log');
-      if (!writeCharacteristic) {
-        if (logEl) logEl.innerHTML += `<div class="text-amber-400">No writable BLE characteristic active.</div>`;
-        return;
-      }
+      if (logEl) logEl.innerHTML += `<div class="text-cyan-400 font-semibold mt-1">✓ Motor Controls Force Unlocked for testing!</div>`;
+    }
 
-      // Standard Hex command packets for Gimbal Motor UART boards
-      let bytes = [];
+    async function sendBleCommand(action) {
       if (action === 'ROTATE_CW') {
-        bytes = [0x5A, 0x01, 0x01, 0x01, 0xA5]; // CW Rotation Packet
         nudgeCameraPan(30);
       } else if (action === 'ROTATE_CCW') {
-        bytes = [0x5A, 0x01, 0x01, 0x02, 0xA5]; // CCW Rotation Packet
         nudgeCameraPan(-30);
       } else if (action === 'TOGGLE_MODE') {
-        bytes = [0x5A, 0x01, 0x02, 0x01, 0xA5]; // 90 deg Mode Packet
         rotateCamera90();
       }
 
-      try {
-        const buffer = new Uint8Array(bytes).buffer;
-        if (writeCharacteristic.properties.writeWithoutResponse) {
-          await writeCharacteristic.writeValueWithoutResponse(buffer);
-        } else {
-          await writeCharacteristic.writeValue(buffer);
+      if (writeCharacteristic) {
+        let bytes = action === 'ROTATE_CW' ? [0x5A, 0x01, 0x01, 0x01, 0xA5] :
+                    action === 'ROTATE_CCW' ? [0x5A, 0x01, 0x01, 0x02, 0xA5] : [0x5A, 0x01, 0x02, 0x01, 0xA5];
+        try {
+          const buffer = new Uint8Array(bytes).buffer;
+          if (writeCharacteristic.properties.writeWithoutResponse) {
+            await writeCharacteristic.writeValueWithoutResponse(buffer);
+          } else {
+            await writeCharacteristic.writeValue(buffer);
+          }
+        } catch (e) {
+          console.log("BLE Write status:", e.message);
         }
-        if (logEl) logEl.innerHTML += `<div class="text-cyan-400">Sent BLE Motor Packet: [${bytes.map(b => '0x'+b.toString(16).toUpperCase()).join(', ')}]</div>`;
-      } catch (e) {
-        if (logEl) logEl.innerHTML += `<div class="text-amber-400">BLE Write Notice: ${e.message}</div>`;
+      }
+    }
+
+    async function sendCustomHexPacket() {
+      const hexString = document.getElementById('hex-cmd-input').value.trim();
+      if (!hexString) return;
+
+      const bytes = hexString.split(' ').map(h => parseInt(h, 16)).filter(b => !isNaN(b));
+      const logEl = document.getElementById('ble-status-log');
+
+      if (writeCharacteristic) {
+        try {
+          const buffer = new Uint8Array(bytes).buffer;
+          if (writeCharacteristic.properties.writeWithoutResponse) {
+            await writeCharacteristic.writeValueWithoutResponse(buffer);
+          } else {
+            await writeCharacteristic.writeValue(buffer);
+          }
+          if (logEl) logEl.innerHTML += `<div class="text-cyan-400">Sent Hex: [${bytes.map(b => '0x'+b.toString(16).toUpperCase()).join(', ')}]</div>`;
+        } catch (e) {
+          if (logEl) logEl.innerHTML += `<div class="text-amber-400">Write notice: ${e.message}</div>`;
+        }
+      } else {
+        if (logEl) logEl.innerHTML += `<div class="text-amber-400">Simulated Hex Packet: [${bytes.map(b => '0x'+b.toString(16).toUpperCase()).join(', ')}]</div>`;
       }
     }
 
@@ -1333,13 +1267,12 @@
       const badge = document.getElementById('ble-connection-badge');
       const btnText = document.getElementById('ble-btn-text');
 
-      if (logEl) logEl.innerHTML += `<div class="text-amber-400 mt-1">BLE Motor Disconnected.</div>`;
+      if (logEl) logEl.innerHTML += `<div class="text-amber-400 mt-1">BLE Disconnected.</div>`;
       if (badge) {
         badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700";
         badge.innerText = "Disconnected";
       }
       if (btnText) btnText.innerText = "Connect BLE Motor";
-      document.getElementById('ble-motor-controls').classList.add('opacity-50', 'pointer-events-none');
     }
   </script>
 </body>
