@@ -1173,10 +1173,15 @@
           try {
             const characteristics = await service.getCharacteristics();
             for (const char of characteristics) {
-              if (char.properties.write || char.properties.writeWithoutResponse) {
+              // Standard SIG System Characteristics (0x2A00 = Device Name, 0x2A01 = Appearance, etc)
+              const isSystemChar = char.uuid.includes('00002a00') || char.uuid.includes('00002a01') || char.uuid.includes('00002a04');
+              
+              if ((char.properties.write || char.properties.writeWithoutResponse) && !isSystemChar) {
                 writeCharacteristic = char;
                 foundWritable = true;
-                logEl.innerHTML += `<div class="text-emerald-400">✓ Found Writable Char: ${char.uuid}</div>`;
+                logEl.innerHTML += `<div class="text-emerald-400">✓ Found Writable Motor Char: ${char.uuid}</div>`;
+              } else if (isSystemChar) {
+                logEl.innerHTML += `<div class="text-slate-500">ℹ Char ${char.uuid.slice(0,8)} (Standard System Info / Device Name)</div>`;
               }
             }
           } catch (e) {
@@ -1188,8 +1193,12 @@
           logEl.innerHTML += `<div class="text-emerald-400 font-bold mt-1">Ready to send motor commands!</div>`;
         } else {
           logEl.innerHTML += `
-            <div class="text-amber-400 mt-1">Connected to Remote HID Stack (Service 1800).</div>
-            <div class="text-slate-300 text-[10px] mt-1">To control physical motor movement directly, turn on the Q18 Motor head unit or click 'Force Unlock Controls' below to test sending hex packets.</div>
+            <div class="text-amber-400 mt-1 font-semibold">Connected to Q18 Remote HID Stack (Service 1800).</div>
+            <div class="text-slate-300 text-[10px] mt-1 leading-relaxed">
+              Notice: Service 1800 & Char 2A00 are Windows system remote keys (which send <code class="text-cyan-300">AudioVolumeUp</code> shutter clicks).
+              <br>• <strong>Shutter & Camera Studio:</strong> Fully active! Press your Q18 remote button to snap photos.
+              <br>• <strong>Physical Motor Rotation:</strong> Click the power button on the Q18 gimbal head body (1x click = 90° turn, 2x click = 360° pan).
+            </div>
           `;
         }
 
