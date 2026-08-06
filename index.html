@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gimbal Pro Q18 Studio & Controller</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              accent: '#06b6d4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Three.js for 3D Gimbal Simulation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f17;
+      color: #f1f5f9;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .pulse-glow {
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+    
+    .active-tab {
+      background-color: #1e293b;
+      border-bottom: 2px solid #06b6d4;
+      color: #38bdf8;
+    }
+
+    /* Video Filter Classes */
+    .filter-none { filter: none; }
+    .filter-vivid { filter: contrast(120%) saturate(140%); }
+    .filter-bw { filter: grayscale(100%) contrast(120%); }
+    .filter-warm { filter: sepia(30%) saturate(120%) hue-rotate(-10deg); }
+    .filter-cool { filter: hue-rotate(30deg) saturate(110%); }
+    .filter-cyber { filter: hue-rotate(180deg) saturate(200%) contrast(110%); }
+    .filter-vintage { filter: sepia(50%) contrast(90%) brightness(90%); }
+
+    /* Flash Effect Overlay */
+    #flash-overlay {
+      pointer-events: none;
+      transition: opacity 0.15s ease-out;
+    }
+
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-panel sticky top-0 z-50 border-b border-slate-800 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-video text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-wide flex items-center gap-2">
+            Gimbal Pro Q18 <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Studio</span>
+          </h1>
+          <p class="text-xs text-slate-400">Universal Remote Control & Camera Suite</p>
+        </div>
+      </div>
+
+      <!-- Quick Bluetooth & Input Detection Status -->
+      <div class="flex items-center gap-3">
+        <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <i class="fa-solid fa-keyboard"></i>
+          <span id="connection-text">Q18 Remote Ready (HID Input)</span>
+        </div>
+
+        <button onclick="requestWebBluetoothGATT()" id="btn-ble-scan" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold text-xs border border-cyan-400 transition shadow-lg shadow-cyan-500/20">
+          <i class="fa-bluetooth text-slate-950"></i>
+          <span id="ble-btn-text">Connect BLE Motor (Experimental)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="border-b border-slate-800 bg-slate-900/60 px-4">
+    <div class="max-w-7xl mx-auto flex overflow-x-auto space-x-1 py-1 no-scrollbar text-sm font-medium">
+      <button onclick="switchTab('camera')" id="tab-camera" class="active-tab px-4 py-2.5 rounded-t-lg flex items-center gap-2 transition whitespace-nowrap">
+        <i class="fa-solid fa-camera"></i> Camera Studio & Shutter
+      </button>
+      <button onclick="switchTab('3d')" id="tab-3d" class="px-4 py-2.5 rounded-t-lg text-slate-400 hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap">
+        <i class="fa-solid fa-cube"></i> 3D Gimbal Simulator
+      </button>
+      <button onclick="switchTab('teleprompter')" id="tab-teleprompter" class="px-4 py-2.5 rounded-t-lg text-slate-400 hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap">
+        <i class="fa-solid fa-scroll"></i> Smart Teleprompter
+      </button>
+      <button onclick="switchTab('sniffer')" id="tab-sniffer" class="px-4 py-2.5 rounded-t-lg text-slate-400 hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap">
+        <i class="fa-solid fa-network-wired"></i> Input Sniffer & Key Mapper
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- Flash Overlay for Camera -->
+    <div id="flash-overlay" class="fixed inset-0 bg-white opacity-0 z-50 transition-opacity pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: CAMERA STUDIO & REMOTE SHUTTER      -->
+    <!-- ========================================== -->
+    <section id="view-camera" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Live Webcam Feed Viewport -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="relative aspect-video rounded-2xl bg-black overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center group">
+            
+            <!-- Camera Video Feed -->
+            <video id="webcam-feed" autoplay playsinline muted class="w-full h-full object-cover filter-none transition-all duration-300"></video>
+            
+            <!-- Hidden Canvas for Photo Capture -->
+            <canvas id="photo-canvas" class="hidden"></canvas>
+
+            <!-- On-Screen Grid Overlay (Rule of Thirds) -->
+            <div id="grid-overlay" class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none border border-white/10 hidden">
+              <div class="border-r border-b border-white/10"></div>
+              <div class="border-r border-b border-white/10"></div>
+              <div class="border-b border-white/10"></div>
+              <div class="border-r border-b border-white/10"></div>
+              <div class="border-r border-b border-white/10"></div>
+              <div class="border-b border-white/10"></div>
+              <div class="border-r border-white/10"></div>
+              <div class="border-r border-white/10"></div>
+              <div></div>
+            </div>
+
+            <!-- Shutter Flash Indicator Notice -->
+            <div id="shutter-notice" class="absolute top-4 left-1/2 -translate-x-1/2 bg-cyan-500 text-slate-950 font-bold px-4 py-1.5 rounded-full text-xs shadow-lg opacity-0 transition-opacity duration-200 flex items-center gap-2 pointer-events-none">
+              <i class="fa-solid fa-camera"></i> Shutter Triggered by Gimbal Remote!
+            </div>
+
+            <!-- Recording Indicator -->
+            <div id="rec-indicator" class="absolute top-4 left-4 bg-red-600/90 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-2 shadow-lg hidden animate-pulse">
+              <span class="w-2.5 h-2.5 rounded-full bg-white"></span>
+              REC <span id="rec-timer">00:00</span>
+            </div>
+
+            <!-- Countdown Timer Screen Display -->
+            <div id="countdown-display" class="absolute inset-0 flex items-center justify-center text-8xl font-black text-cyan-400 drop-shadow-lg hidden">
+              3
+            </div>
+
+            <!-- Empty Camera Placeholder (If no camera permission) -->
+            <div id="camera-placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-900 space-y-4">
+              <div class="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 text-2xl">
+                <i class="fa-solid fa-video-slash"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-semibold text-slate-200">Camera Feed Off</h3>
+                <p class="text-xs text-slate-400 mt-1 max-w-sm">Enable your webcam to start using your Q18 Gimbal remote as a wireless shutter controller.</p>
+              </div>
+              <button onclick="startWebcam()" class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-sm transition shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-power-off mr-2"></i> Turn On Camera
+              </button>
+            </div>
+
+            <!-- Viewport Controls Overlay -->
+            <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-auto">
+              <div class="flex items-center gap-2 bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50">
+                <button onclick="toggleGrid()" title="Toggle Grid" class="text-slate-400 hover:text-white p-1 transition">
+                  <i class="fa-solid fa-border-all text-sm"></i>
+                </button>
+                <button onclick="toggleMirror()" title="Flip Camera" class="text-slate-400 hover:text-white p-1 transition">
+                  <i class="fa-solid fa-right-left text-sm"></i>
+                </button>
+                <button onclick="toggleAudioFeedback()" id="audio-btn" title="Shutter Sound" class="text-cyan-400 hover:text-white p-1 transition">
+                  <i class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+
+                <div class="h-4 w-[1px] bg-slate-700 mx-1"></div>
+
+                <!-- Gimbal Pan & Rotate Controls -->
+                <button onclick="nudgeCameraPan(-15)" title="Pan Gimbal Left (◀)" class="text-cyan-400 hover:text-cyan-300 p-1 transition flex items-center gap-1">
+                  <i class="fa-solid fa-arrow-rotate-left text-sm"></i>
+                </button>
+                <button onclick="rotateCamera90()" title="Switch 90° Orientation (Portrait/Landscape)" class="text-cyan-400 hover:text-cyan-300 p-1 transition flex items-center gap-1">
+                  <i class="fa-solid fa-mobile-screen-button text-sm"></i>
+                </button>
+                <button onclick="nudgeCameraPan(15)" title="Pan Gimbal Right (▶)" class="text-cyan-400 hover:text-cyan-300 p-1 transition flex items-center gap-1">
+                  <i class="fa-solid fa-arrow-rotate-right text-sm"></i>
+                </button>
+              </div>
+
+              <!-- Key Signal Pulse & Gimbal Telemetry -->
+            <div class="flex items-center gap-2">
+              <div id="gimbal-pan-badge" class="hidden sm:flex bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 items-center gap-1.5">
+                <i class="fa-solid fa-compass text-cyan-400 text-xs"></i>
+                <span>Virtual Pan: <strong id="cam-pan-val" class="text-cyan-400">0°</strong></span>
+              </div>
+
+              <div class="bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 flex items-center gap-2">
+                <span id="remote-signal-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+                <span>Last Command: <strong id="last-key-label" class="text-cyan-400">None</strong></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar: Camera Filters & Shutter Remote Info -->
+        <div class="space-y-6">
+          
+          <!-- Hardware Motor Notice Card -->
+          <div class="glass-panel p-5 rounded-2xl space-y-3 border-l-4 border-l-amber-500">
+            <h3 class="text-sm font-semibold text-amber-400 flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation"></i> How Q18 Motor Control Works
+            </h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              <strong>Remote vs. Motor:</strong> Your Windows PC connects to the Q18 remote as a <em>Bluetooth Input Device</em> (Receiving shutter clicks). 
+            </p>
+            <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
+              <div class="flex items-start gap-1.5">
+                <i class="fa-solid fa-mobile-screen text-cyan-400 mt-0.5"></i>
+                <span><strong>Physical Motor Rotation:</strong> Double-click the <em>power button on the physical gimbal body</em> to start 360° desktop rotation.</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <i class="fa-solid fa-sliders text-cyan-400 mt-0.5"></i>
+                <span><strong>Web On-Screen Controls:</strong> Adjusts digital framing & 3D visualization. Use <em>Web Bluetooth BLE</em> above to probe raw GATT motor commands.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gimbal Remote Setup Card -->
+          <div class="glass-panel p-5 rounded-2xl space-y-3">
+            <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-hand text-cyan-400"></i> How Q18 Remote Control Works
+            </h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Your <strong>Gimbal Pro Q18</strong> sends standard media/keyboard keys (such as <code class="bg-slate-800 text-cyan-300 px-1.5 py-0.5 rounded">Volume Up</code> or <code class="bg-slate-800 text-cyan-300 px-1.5 py-0.5 rounded">Enter</code>) over Bluetooth.
+            </p>
+            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs space-y-2">
+              <div class="flex justify-between items-center text-slate-300">
+                <span>Shutter Button:</span>
+                <span class="font-mono text-cyan-400">Takes Photo / Starts Video</span>
+              </div>
+              <div class="flex justify-between items-center text-slate-300">
+                <span>Double Press / Mode:</span>
+                <span class="font-mono text-cyan-400">Switches Camera Filters</span>
+              </div>
+              <div class="flex justify-between items-center text-slate-300">
+                <span>Status:</span>
+                <span id="remote-detected-status" class="text-emerald-400 font-semibold">Active & Listening</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visual Filter Selection -->
+          <div class="glass-panel p-5 rounded-2xl space-y-3">
+            <h3 class="text-sm font-semibold text-slate-200 flex items-center justify-between">
+              <span><i class="fa-solid fa-wand-magic-sparkles text-cyan-400 mr-2"></i> Camera Color Filter</span>
+              <span id="current-filter-name" class="text-xs font-mono text-cyan-400">Normal</span>
+            </h3>
+            
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <button onclick="applyFilter('none', 'Normal')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center transition">Normal</button>
+              <button onclick="applyFilter('vivid', 'Vivid')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center transition">Vivid</button>
+              <button onclick="applyFilter('bw', 'B&W')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center transition">B & W</button>
+              <button onclick="applyFilter('warm', 'Warm')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center transition">Warm</button>
+              <button onclick="applyFilter('cool', 'Cool')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center transition">Cool</button>
+              <button onclick="applyFilter('cyber', 'Cyberpunk')" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-center transition">Cyber</button>
+            </div>
+          </div>
+
+          <!-- Snapshot Gallery -->
+          <div class="glass-panel p-5 rounded-2xl space-y-3">
+            <div class="flex justify-between items-center">
+              <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-images text-cyan-400"></i> Snapshots Gallery
+              </h3>
+              <span id="gallery-count" class="text-xs text-slate-400">0 Photos</span>
+            </div>
+
+            <div id="gallery-container" class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+              <div class="col-span-3 py-6 text-center text-xs text-slate-500 border border-dashed border-slate-800 rounded-xl">
+                No captures yet. Press your Q18 Gimbal remote button to snap a photo!
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: 3D GIMBAL SIMULATOR                 -->
+    <!-- ========================================== -->
+    <section id="view-3d" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 3D Canvas Viewport -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl border border-slate-800 overflow-hidden relative min-h-[450px] flex items-center justify-center">
+          <div id="three-container" class="w-full h-[480px]"></div>
+
+          <!-- 3D Overlay Labels -->
+          <div class="absolute top-4 left-4 bg-slate-900/80 backdrop-blur p-3 rounded-xl border border-slate-800 text-xs space-y-1">
+            <div class="font-bold text-cyan-400 flex items-center gap-2">
+              <i class="fa-solid fa-compass"></i> Q18 1-Axis / 3-Axis Stabilization Simulator
+            </div>
+            <p class="text-slate-400">Interactive 3D model. Click & drag to rotate view.</p>
+          </div>
+
+          <!-- Real-time Orientation Telemetry -->
+          <div class="absolute bottom-4 left-4 right-4 flex justify-between items-center pointer-events-none">
+            <div class="bg-slate-900/80 backdrop-blur px-4 py-2 rounded-xl border border-slate-800 text-xs font-mono flex gap-4 text-slate-300">
+              <div>PAN: <span id="tele-pan" class="text-cyan-400">0°</span></div>
+              <div>TILT: <span id="tele-tilt" class="text-cyan-400">0°</span></div>
+              <div>ROLL: <span id="tele-roll" class="text-cyan-400">0°</span></div>
+            </div>
+
+            <button onclick="reset3DGimbal()" class="pointer-events-auto bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-xl border border-slate-700 transition">
+              <i class="fa-solid fa-rotate-left mr-1"></i> Reset View
+            </button>
+          </div>
+        </div>
+
+        <!-- Gimbal Controls & Modes -->
+        <div class="space-y-6">
+          <div class="glass-panel p-5 rounded-2xl space-y-4">
+            <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-cyan-400"></i> Manual Pan / Tilt / Roll
+            </h3>
+
+            <!-- Pan Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>Pan Angle (Horizontal)</span>
+                <span id="pan-val-display" class="font-mono text-cyan-400">0°</span>
+              </div>
+              <input type="range" id="slider-pan" min="-180" max="180" value="0" oninput="updateGimbalRotation()" class="w-full accent-cyan-500 bg-slate-800 h-2 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Tilt Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>Tilt Angle (Vertical)</span>
+                <span id="tilt-val-display" class="font-mono text-cyan-400">0°</span>
+              </div>
+              <input type="range" id="slider-tilt" min="-60" max="60" value="0" oninput="updateGimbalRotation()" class="w-full accent-cyan-500 bg-slate-800 h-2 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Roll Slider -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>Roll Angle (Horizon Balance)</span>
+                <span id="roll-val-display" class="font-mono text-cyan-400">0°</span>
+              </div>
+              <input type="range" id="slider-roll" min="-45" max="45" value="0" oninput="updateGimbalRotation()" class="w-full accent-cyan-500 bg-slate-800 h-2 rounded-lg cursor-pointer">
+            </div>
+          </div>
+
+          <!-- Gimbal Preset Modes -->
+          <div class="glass-panel p-5 rounded-2xl space-y-3">
+            <h3 class="text-sm font-semibold text-slate-200">Gimbal Automated Modes</h3>
+            
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <button onclick="startAutoPan()" id="btn-autopan" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition flex flex-col gap-1">
+                <span class="font-bold text-slate-200"><i class="fa-solid fa-arrows-spin text-cyan-400 mr-1"></i> 360° Desktop Pan</span>
+                <span class="text-[10px] text-slate-400">Continuous smooth horizontal rotation</span>
+              </button>
+
+              <button onclick="toggleInceptionMode()" id="btn-inception" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition flex flex-col gap-1">
+                <span class="font-bold text-slate-200"><i class="fa-solid fa-circle-notch text-cyan-400 mr-1"></i> Inception Mode</span>
+                <span class="text-[10px] text-slate-400">Dynamic barrel roll effect</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Virtual Joystick -->
+          <div class="glass-panel p-5 rounded-2xl text-center space-y-3">
+            <h3 class="text-xs font-semibold text-slate-400">On-Screen Virtual D-Pad Controller</h3>
+            <div class="inline-grid grid-cols-3 gap-2 max-w-[160px] mx-auto">
+              <div></div>
+              <button onclick="nudgeTilt(-10)" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-bold text-slate-300 transition flex items-center justify-center">▲</button>
+              <div></div>
+              <button onclick="nudgePan(-15)" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-bold text-slate-300 transition flex items-center justify-center">◄</button>
+              <button onclick="reset3DGimbal()" class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-400 flex items-center justify-center">●</button>
+              <button onclick="nudgePan(15)" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-bold text-slate-300 transition flex items-center justify-center">►</button>
+              <div></div>
+              <button onclick="nudgeTilt(10)" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 font-bold text-slate-300 transition flex items-center justify-center">▼</button>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: SMART TELEPROMPTER                  -->
+    <!-- ========================================== -->
+    <section id="view-teleprompter" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Teleprompter Display Screen -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl border border-slate-800 p-6 flex flex-col min-h-[500px] justify-between relative overflow-hidden">
+          
+          <!-- Top Teleprompter Controls Bar -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4 z-10">
+            <div class="flex items-center gap-3">
+              <button onclick="toggleTeleprompterPlay()" id="btn-prompter-play" class="px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/20 hover:bg-cyan-400 transition">
+                <i class="fa-solid fa-play"></i> <span id="prompter-play-text">Start Scrolling</span>
+              </button>
+              <button onclick="resetTeleprompter()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+              </button>
+            </div>
+
+            <div class="flex items-center gap-4 text-xs text-slate-400">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="chk-mirror" onchange="toggleMirrorPrompter()" class="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0">
+                <span>Mirror View</span>
+              </label>
+              
+              <div class="flex items-center gap-2">
+                <span>Speed:</span>
+                <input type="range" id="prompter-speed" min="1" max="10" value="3" class="w-20 accent-cyan-500">
+              </div>
+            </div>
+          </div>
+
+          <!-- Prompt Reading Window -->
+          <div id="prompter-viewport" class="my-6 h-[340px] overflow-y-auto scroll-smooth p-4 text-center text-slate-100 font-sans leading-relaxed text-2xl transition-all border-y border-slate-800/40 relative">
+            <div id="prompter-content" class="py-24 space-y-6">
+              <p>Welcome to the <strong>Gimbal Pro Q18</strong> Smart Teleprompter Studio.</p>
+              <p>You can start or pause reading by pressing the remote button on your Q18 Gimbal!</p>
+              <p>This allows you to record smooth, eye-contact video content hands-free from a distance.</p>
+              <p>Customize this text in the editor panel on the right side.</p>
+            </div>
+          </div>
+
+          <!-- Reading Eye-Line Indicator Guide Bar -->
+          <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-16 border-y border-cyan-500/30 bg-cyan-500/5 pointer-events-none flex items-center justify-between px-4">
+            <span class="text-[10px] uppercase font-bold text-cyan-400/60 tracking-widest">Reading Line</span>
+            <span class="text-[10px] uppercase font-bold text-cyan-400/60 tracking-widest">Reading Line</span>
+          </div>
+
+          <div class="text-xs text-slate-500 text-center border-t border-slate-800 pt-3">
+            Press <strong>Q18 Remote Shutter</strong> to Play/Pause • Press <strong>Volume Keys</strong> to adjust speed
+          </div>
+        </div>
+
+        <!-- Script Editor -->
+        <div class="glass-panel p-5 rounded-2xl space-y-4">
+          <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square text-cyan-400"></i> Script Editor
+          </h3>
+          <textarea id="prompter-editor" class="w-full h-72 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 resize-none font-mono" placeholder="Type or paste your video script here..."></textarea>
+          
+          <button onclick="updatePrompterText()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 font-semibold text-xs border border-slate-700 transition">
+            <i class="fa-solid fa-arrows-rotate mr-2"></i> Update Script Display
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: INPUT SNIFFER & KEY MAPPER          -->
+    <!-- ========================================== -->
+    <section id="view-sniffer" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Live Visual Remote Controller Model -->
+        <div class="glass-panel p-6 rounded-2xl space-y-6 flex flex-col items-center justify-center text-center">
+          <h3 class="text-sm font-semibold text-slate-200">Q18 Remote Visual Feedback</h3>
+          
+          <!-- Graphic representation of Q18 Handle & Remote -->
+          <div class="w-32 h-64 bg-slate-950 border-2 border-slate-800 rounded-full p-4 flex flex-col items-center justify-between relative shadow-2xl">
+            <!-- Top Light Indicator -->
+            <div id="visual-led" class="w-3 h-3 rounded-full bg-slate-700 transition-all duration-300"></div>
+
+            <!-- Main Big Shutter Button -->
+            <div id="visual-btn-shutter" class="w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-inner transition-all duration-150">
+              <i class="fa-solid fa-camera text-xl"></i>
+            </div>
+
+            <!-- Power / Mode Button -->
+            <div id="visual-btn-mode" class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 text-xs shadow-inner transition-all duration-150">
+              <i class="fa-solid fa-power-off"></i>
+            </div>
+
+            <div class="text-[10px] text-slate-600 font-mono">GIMBAL PRO Q18</div>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            Press any button on your connected Q18 Gimbal remote to see instant visual flash.
+          </p>
+
+          <!-- Web Bluetooth GATT Experimental Terminal -->
+          <div class="w-full pt-4 border-t border-slate-800 text-left space-y-2">
+            <h4 class="text-xs font-semibold text-cyan-400">Web Bluetooth BLE Motor Terminal</h4>
+            <p class="text-[10px] text-slate-400">Direct GATT communication (Requires Chrome/Edge on HTTPS/Localhost)</p>
+            <button onclick="requestWebBluetoothGATT()" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition flex items-center justify-center gap-2">
+              <i class="fa-bluetooth text-cyan-400"></i> Scan GATT Services
+            </button>
+            <div id="ble-status-log" class="text-[10px] font-mono text-slate-400 break-all bg-slate-950 p-2.5 rounded border border-slate-800 space-y-1">
+              <span>Status: Idle. Click Scan to probe Q18 BLE GATT.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Sniffer Event Log Feed -->
+        <div class="lg:col-span-2 glass-panel p-6 rounded-2xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <i class="fa-solid fa-terminal text-cyan-400"></i> Real-time Key Event Inspector
+              </h3>
+              <p class="text-xs text-slate-400">Logs key codes received from Windows Bluetooth input stack</p>
+            </div>
+            <button onclick="clearSnifferLog()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 border border-slate-700 transition">
+              Clear Console
+            </button>
+          </div>
+
+          <!-- Event Table Console -->
+          <div id="sniffer-log-container" class="h-80 overflow-y-auto bg-slate-950 rounded-xl p-3 border border-slate-800/80 font-mono text-xs space-y-2">
+            <div class="text-slate-500 italic text-center py-10">Listening for Q18 Bluetooth remote key signals... Press shutter button!</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-900/40 py-4 px-6 text-center text-xs text-slate-500">
+    Gimbal Pro Q18 Web Studio • Fully Compatible with Windows Bluetooth HID Remote Inputs
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT APP LOGIC                       -->
+  <!-- ========================================== -->
+  <script>
+    // App State
+    let activeTab = 'camera';
+    let mediaStream = null;
+    let cameraMode = 'photo'; // 'photo' or 'video'
+    let isRecording = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recInterval = null;
+    let recSeconds = 0;
+    let isMirrored = false;
+    let activeFilter = 'none';
+    let galleryCount = 0;
+    let audioFeedback = true;
+    let cameraPanAngle = 0;
+    let cameraRotationDeg = 0;
+
+    // Teleprompter State
+    let isPrompterPlaying = false;
+    let prompterInterval = null;
+
+    // 3D Gimbal Engine State
+    let scene, camera, renderer, gimbalMesh, phoneMesh;
+    let autoPanActive = false;
+    let inceptionActive = false;
+    let panAngle = 0, tiltAngle = 0, rollAngle = 0;
+
+    // Web Audio API Synthesizer for Camera Shutter sound
+    let audioCtx = null;
+    function playShutterSound() {
+      if (!audioFeedback) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Quick noise burst for mechanical click
+        const bufferSize = audioCtx.sampleRate * 0.05;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1000;
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        noise.start();
+      } catch (e) {
+        console.log("Audio play blocked by browser policy until interaction");
+      }
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      ['camera', '3d', 'teleprompter', 'sniffer'].forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const tabBtn = document.getElementById(`tab-${t}`);
+        if (t === tabId) {
+          view.classList.remove('hidden');
+          tabBtn.className = "active-tab px-4 py-2.5 rounded-t-lg flex items-center gap-2 transition whitespace-nowrap";
+        } else {
+          view.classList.add('hidden');
+          tabBtn.className = "px-4 py-2.5 rounded-t-lg text-slate-400 hover:text-slate-200 flex items-center gap-2 transition whitespace-nowrap";
+        }
+      });
+
+      if (tabId === '3d' && !scene) {
+        init3DScene();
+      }
+    }
+
+    async function startWebcam() {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+          audio: true
+        });
+        const videoElem = document.getElementById('webcam-feed');
+        videoElem.srcObject = mediaStream;
+        document.getElementById('camera-placeholder').classList.add('hidden');
+      } catch (err) {
+        alert("Camera permission denied or camera not found: " + err.message);
+      }
+    }
+
+    function setCameraMode(mode) {
+      cameraMode = mode;
+      const photoBtn = document.getElementById('mode-photo-btn');
+      const videoBtn = document.getElementById('mode-video-btn');
+      const shutterText = document.getElementById('shutter-btn-text');
+
+      if (mode === 'photo') {
+        photoBtn.className = "px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-bold transition";
+        videoBtn.className = "px-4 py-2 rounded-lg text-slate-400 hover:text-white transition";
+        shutterText.innerText = "TAKE SNAPSHOT";
+      } else {
+        videoBtn.className = "px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-bold transition";
+        photoBtn.className = "px-4 py-2 rounded-lg text-slate-400 hover:text-white transition";
+        shutterText.innerText = isRecording ? "STOP RECORDING" : "START RECORDING";
+      }
+    }
+
+    function triggerShutter() {
+      const timerSec = parseInt(document.getElementById('timer-select').value);
+      if (timerSec > 0) {
+        runCountdown(timerSec, () => executeShutterAction());
+      } else {
+        executeShutterAction();
+      }
+    }
+
+    function runCountdown(seconds, callback) {
+      const display = document.getElementById('countdown-display');
+      display.classList.remove('hidden');
+      let count = seconds;
+      display.innerText = count;
+
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          display.innerText = count;
+        } else {
+          clearInterval(timer);
+          display.classList.add('hidden');
+          callback();
+        }
+      }, 1000);
+    }
+
+    function executeShutterAction() {
+      // Visual shutter flash effect
+      const flash = document.getElementById('flash-overlay');
+      flash.style.opacity = '0.8';
+      setTimeout(() => flash.style.opacity = '0', 150);
+
+      // Flash on-screen notice
+      const notice = document.getElementById('shutter-notice');
+      notice.style.opacity = '1';
+      setTimeout(() => notice.style.opacity = '0', 1800);
+
+      playShutterSound();
+
+      if (cameraMode === 'photo') {
+        takePhoto();
+      } else {
+        toggleRecording();
+      }
+    }
+
+    function takePhoto() {
+      const video = document.getElementById('webcam-feed');
+      const canvas = document.getElementById('photo-canvas');
+      if (!video.videoWidth) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+
+      // Apply mirror flip if enabled
+      if (isMirrored) {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/png');
+
+      // Append to gallery
+      addPhotoToGallery(dataUrl);
+    }
+
+    function addPhotoToGallery(dataUrl) {
+      const container = document.getElementById('gallery-container');
+      if (galleryCount === 0) {
+        container.innerHTML = '';
+      }
+      galleryCount++;
+      document.getElementById('gallery-count').innerText = `${galleryCount} Photos`;
+
+      const card = document.createElement('div');
+      card.className = "relative rounded-xl overflow-hidden border border-slate-700 group aspect-square bg-slate-900";
+      card.innerHTML = `
+        <img src="${dataUrl}" class="w-full h-full object-cover">
+        <a href="${dataUrl}" download="Gimbal_Q18_Photo_${Date.now()}.png" class="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-cyan-400 transition">
+          <i class="fa-solid fa-download text-lg"></i>
+        </a>
+      `;
+      container.prepend(card);
+    }
+
+    function toggleRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      if (!mediaStream) return;
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Gimbal_Q18_Video_${Date.now()}.webm`;
+        a.click();
+      };
+
+      mediaRecorder.start();
+      isRecording = true;
+      document.getElementById('rec-indicator').classList.remove('hidden');
+      document.getElementById('shutter-btn-text').innerText = "STOP RECORDING";
+
+      recSeconds = 0;
+      recInterval = setInterval(() => {
+        recSeconds++;
+        const mins = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+        const secs = String(recSeconds % 60).padStart(2, '0');
+        document.getElementById('rec-timer').innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        clearInterval(recInterval);
+        document.getElementById('rec-indicator').classList.add('hidden');
+        document.getElementById('shutter-btn-text').innerText = "START RECORDING";
+      }
+    }
+
+    function applyFilter(filterClass, filterName) {
+      activeFilter = filterClass;
+      const video = document.getElementById('webcam-feed');
+      video.className = `w-full h-full object-cover transition-all duration-300 filter-${filterClass}`;
+      document.getElementById('current-filter-name').innerText = filterName;
+    }
+
+    function toggleGrid() {
+      document.getElementById('grid-overlay').classList.toggle('hidden');
+    }
+
+    function toggleMirror() {
+      isMirrored = !isMirrored;
+      updateCameraTransforms();
+    }
+
+    function nudgeCameraPan(deg) {
+      cameraPanAngle += deg;
+      if (cameraPanAngle > 180) cameraPanAngle = -180;
+      if (cameraPanAngle < -180) cameraPanAngle = 180;
+      
+      updateCameraTransforms();
+      
+      // Sync with 3D Gimbal Simulator pan angle
+      const sliderPan = document.getElementById('slider-pan');
+      if (sliderPan) {
+        sliderPan.value = cameraPanAngle;
+        updateGimbalRotation();
+      }
+    }
+
+    function rotateCamera90() {
+      cameraRotationDeg = (cameraRotationDeg + 90) % 360;
+      updateCameraTransforms();
+      
+      // Sync with 3D Gimbal Simulator roll angle
+      const sliderRoll = document.getElementById('slider-roll');
+      if (sliderRoll) {
+        sliderRoll.value = cameraRotationDeg % 180 === 90 ? 90 : 0;
+        updateGimbalRotation();
+      }
+    }
+
+    function updateCameraTransforms() {
+      const video = document.getElementById('webcam-feed');
+      const panValDisplay = document.getElementById('cam-pan-val');
+      
+      if (panValDisplay) {
+        panValDisplay.innerText = `${cameraPanAngle}°${cameraRotationDeg ? ` (${cameraRotationDeg}°)` : ''}`;
+      }
+
+      const mirrorScale = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+      const rotateTransform = `rotate(${cameraRotationDeg}deg)`;
+      const panTransform = `translateX(${cameraPanAngle * 0.5}px)`;
+
+      video.style.transform = `${mirrorScale} ${rotateTransform} ${panTransform}`;
+    }
+
+    function toggleAudioFeedback() {
+      audioFeedback = !audioFeedback;
+      document.getElementById('audio-btn').className = audioFeedback ? "text-cyan-400 hover:text-white p-1 transition" : "text-slate-600 hover:text-white p-1 transition";
+    }
+
+    // Global Keyboard Listener catching Q18 Remote Shutter Signals
+    window.addEventListener('keydown', (e) => {
+      // Light up Visual LED & Remote button
+      const led = document.getElementById('visual-led');
+      const btnVisual = document.getElementById('visual-btn-shutter');
+      const dot = document.getElementById('remote-signal-dot');
+      const lastKeyLabel = document.getElementById('last-key-label');
+
+      if (led) led.className = "w-3 h-3 rounded-full bg-cyan-400 pulse-glow";
+      if (btnVisual) btnVisual.className = "w-16 h-16 rounded-full bg-cyan-500 border-2 border-white flex items-center justify-center text-slate-950 shadow-inner scale-95 transition-all";
+      if (dot) dot.className = "w-2 h-2 rounded-full bg-cyan-400 animate-ping";
+      if (lastKeyLabel) lastKeyLabel.innerText = e.key || e.code;
+
+      setTimeout(() => {
+        if (led) led.className = "w-3 h-3 rounded-full bg-slate-700 transition-all duration-300";
+        if (btnVisual) btnVisual.className = "w-16 h-16 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-inner transition-all";
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+      }, 300);
+
+      // Log to event console
+      logSnifferEvent(e);
+
+      // Route Keypress based on active Tab
+      // Common Q18 Remote keys: VolumeUp, VolumeDown, Enter, Space, MediaPlayPause, ArrowDown
+      const isShutterKey = ['AudioVolumeUp', 'VolumeUp', 'Enter', 'Space', 'MediaPlayPause', 'ArrowDown'].includes(e.key) || e.code === 'VolumeUp';
+
+      if (isShutterKey) {
+        if (activeTab === 'camera') {
+          triggerShutter();
+        } else if (activeTab === 'teleprompter') {
+          toggleTeleprompterPlay();
+        } else if (activeTab === '3d') {
+          toggleInceptionMode();
+        }
+      }
+    });
+
+    function logSnifferEvent(e) {
+      const logContainer = document.getElementById('sniffer-log-container');
+      if (!logContainer) return;
+
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = "p-2 rounded bg-slate-900 border border-slate-800/60 flex justify-between items-center text-xs";
+      entry.innerHTML = `
+        <div class="flex items-center gap-3">
+          <span class="text-cyan-400 font-bold">[${time}]</span>
+          <span class="text-slate-200">Key: <strong class="text-white">${e.key}</strong></span>
+          <span class="text-slate-500">Code: ${e.code}</span>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px]">GIMBAL HID SIGNAL</span>
+      `;
+
+      if (logContainer.innerText.includes('Listening for Q18')) {
+        logContainer.innerHTML = '';
+      }
+
+      logContainer.prepend(entry);
+    }
+
+    function clearSnifferLog() {
+      const logContainer = document.getElementById('sniffer-log-container');
+      logContainer.innerHTML = '<div class="text-slate-500 italic text-center py-10">Listening for Q18 Bluetooth remote key signals... Press shutter button!</div>';
+    }
+
+    function toggleTeleprompterPlay() {
+      isPrompterPlaying = !isPrompterPlaying;
+      const playBtnText = document.getElementById('prompter-play-text');
+      
+      if (isPrompterPlaying) {
+        playBtnText.innerText = "Pause Scrolling";
+        const viewport = document.getElementById('prompter-viewport');
+        const speed = parseInt(document.getElementById('prompter-speed').value);
+
+        prompterInterval = setInterval(() => {
+          viewport.scrollTop += speed * 0.8;
+        }, 30);
+      } else {
+        playBtnText.innerText = "Start Scrolling";
+        clearInterval(prompterInterval);
+      }
+    }
+
+    function resetTeleprompter() {
+      isPrompterPlaying = false;
+      clearInterval(prompterInterval);
+      document.getElementById('prompter-play-text').innerText = "Start Scrolling";
+      document.getElementById('prompter-viewport').scrollTop = 0;
+    }
+
+    function toggleMirrorPrompter() {
+      const content = document.getElementById('prompter-content');
+      const isChecked = document.getElementById('chk-mirror').checked;
+      content.style.transform = isChecked ? 'scaleX(-1)' : 'scaleX(1)';
+    }
+
+    function updatePrompterText() {
+      const newText = document.getElementById('prompter-editor').value;
+      if (newText.trim()) {
+        const paragraphs = newText.split('\n').map(p => `<p>${p}</p>`).join('');
+        document.getElementById('prompter-content').innerHTML = paragraphs;
+      }
+    }
+
+    function init3DScene() {
+      const container = document.getElementById('three-container');
+      if (!container) return;
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b0f17);
+
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+      camera.position.set(0, 0, 10);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      container.appendChild(renderer.domElement);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0x06b6d4, 1.2);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
+      // Build 3D Gimbal Group
+      gimbalMesh = new THREE.Group();
+
+      // Handle Base
+      const handleGeo = new THREE.CylinderGeometry(0.2, 0.25, 3.5, 32);
+      const handleMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.8 });
+      const handle = new THREE.Mesh(handleGeo, handleMat);
+      handle.position.y = -1.5;
+      gimbalMesh.add(handle);
+
+      // Motor Joint Ring
+      const jointGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.4, 32);
+      const jointMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9, roughness: 0.2 });
+      const joint = new THREE.Mesh(jointGeo, jointMat);
+      joint.position.y = 0.2;
+      gimbalMesh.add(joint);
+
+      // Phone Holder Mount & Smartphone
+      phoneMesh = new THREE.Group();
+
+      const phoneGeo = new THREE.BoxGeometry(1.6, 3.0, 0.15);
+      const phoneMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+      const phone = new THREE.Mesh(phoneGeo, phoneMat);
+
+      // Phone Screen Display
+      const screenGeo = new THREE.PlaneGeometry(1.4, 2.7);
+      const screenMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+      const screen = new THREE.Mesh(screenGeo, screenMat);
+      screen.position.z = 0.08;
+      phone.add(screen);
+
+      phoneMesh.add(phone);
+      phoneMesh.position.y = 1.0;
+      gimbalMesh.add(phoneMesh);
+
+      scene.add(gimbalMesh);
+
+      // Animation Loop
+      function animate3D() {
+        requestAnimationFrame(animate3D);
+
+        if (autoPanActive) {
+          panAngle += 1;
+          if (panAngle > 180) panAngle = -180;
+          document.getElementById('slider-pan').value = panAngle;
+          updateGimbalRotation();
+        }
+
+        if (inceptionActive) {
+          rollAngle += 3;
+          if (rollAngle > 180) rollAngle = -180;
+          document.getElementById('slider-roll').value = rollAngle;
+          updateGimbalRotation();
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animate3D();
+    }
+
+    function updateGimbalRotation() {
+      panAngle = parseFloat(document.getElementById('slider-pan').value);
+      tiltAngle = parseFloat(document.getElementById('slider-tilt').value);
+      rollAngle = parseFloat(document.getElementById('slider-roll').value);
+
+      document.getElementById('pan-val-display').innerText = `${panAngle}°`;
+      document.getElementById('tilt-val-display').innerText = `${tiltAngle}°`;
+      document.getElementById('roll-val-display').innerText = `${rollAngle}°`;
+
+      document.getElementById('tele-pan').innerText = `${panAngle}°`;
+      document.getElementById('tele-tilt').innerText = `${tiltAngle}°`;
+      document.getElementById('tele-roll').innerText = `${rollAngle}°`;
+
+      if (gimbalMesh) {
+        gimbalMesh.rotation.y = THREE.MathUtils.degToRad(panAngle);
+        gimbalMesh.rotation.x = THREE.MathUtils.degToRad(tiltAngle);
+      }
+      if (phoneMesh) {
+        phoneMesh.rotation.z = THREE.MathUtils.degToRad(rollAngle);
+      }
+    }
+
+    function nudgePan(deg) {
+      const slider = document.getElementById('slider-pan');
+      slider.value = parseInt(slider.value) + deg;
+      updateGimbalRotation();
+    }
+
+    function nudgeTilt(deg) {
+      const slider = document.getElementById('slider-tilt');
+      slider.value = parseInt(slider.value) + deg;
+      updateGimbalRotation();
+    }
+
+    function startAutoPan() {
+      autoPanActive = !autoPanActive;
+      const btn = document.getElementById('btn-autopan');
+      btn.className = autoPanActive ? "p-3 rounded-xl bg-cyan-500/20 border border-cyan-500 text-left transition flex flex-col gap-1" : "p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition flex flex-col gap-1";
+    }
+
+    function toggleInceptionMode() {
+      inceptionActive = !inceptionActive;
+      const btn = document.getElementById('btn-inception');
+      btn.className = inceptionActive ? "p-3 rounded-xl bg-cyan-500/20 border border-cyan-500 text-left transition flex flex-col gap-1" : "p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-left transition flex flex-col gap-1";
+    }
+
+    function reset3DGimbal() {
+      autoPanActive = false;
+      inceptionActive = false;
+      document.getElementById('slider-pan').value = 0;
+      document.getElementById('slider-tilt').value = 0;
+      document.getElementById('slider-roll').value = 0;
+      updateGimbalRotation();
+    }
+
+    window.onload = function() {
+      startWebcam();
+    };
+
+    // Experimental Web Bluetooth LE (GATT) Direct Motor Communication
+    let bleDevice = null;
+    let bleServer = null;
+
+    async function requestWebBluetoothGATT() {
+      const logEl = document.getElementById('ble-status-log');
+      const btnText = document.getElementById('ble-btn-text');
+
+      if (!navigator.bluetooth) {
+        if (logEl) logEl.innerHTML = `<span class="text-amber-400">Web Bluetooth API is not supported in this browser.</span>`;
+        alert("Web Bluetooth API is not supported on this browser. Please use Google Chrome or Microsoft Edge.");
+        return;
+      }
+
+      try {
+        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Status:</span> Scanning for Bluetooth LE devices...`;
+        bleDevice = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['generic_access', 'human_interface_device', 0xffe0, 0xfff0]
+        });
+
+        logEl.innerHTML = `<span class="text-cyan-400 font-bold">Status:</span> Connecting to ${bleDevice.name || 'Q18 Gimbal'}...`;
+        bleServer = await bleDevice.gatt.connect();
+
+        logEl.innerHTML = `<span class="text-emerald-400 font-bold">Connected!</span> GATT Services found.`;
+        if (btnText) btnText.innerText = "BLE Connected";
+
+        const services = await bleServer.getPrimaryServices();
+        let serviceUuids = services.map(s => s.uuid).join(', ');
+        logEl.innerHTML = `<span class="text-emerald-400 font-bold">Connected!</span> Services: ${serviceUuids}`;
+
+      } catch (err) {
+        console.warn("Web Bluetooth GATT Notice:", err);
+        
+        // Handle iframe sandbox Permissions-Policy restriction gracefully
+        if (err.name === 'SecurityError' || err.message.includes('permissions policy')) {
+          logEl.innerHTML = `
+            <div class="text-amber-400 font-semibold mb-1">⚠️ Web Bluetooth Blocked by Frame Policy</div>
+            <div class="text-slate-300 text-[11px] leading-tight mb-2">Browser security restricts direct Web Bluetooth access inside embedded previews.</div>
+            <div class="bg-slate-900 p-2 rounded border border-slate-800 text-[10px] text-slate-300 space-y-1">
+              <div><strong>To physically turn your Q18 Gimbal right now:</strong></div>
+              <div>• <strong>Single Click</strong> Gimbal Body Button ➔ Switch Portrait / Landscape (90°)</div>
+              <div>• <strong>Double Click</strong> Gimbal Body Button ➔ Start 360° Desktop Pan</div>
+            </div>
+          `;
+        } else {
+          logEl.innerHTML = `<span class="text-amber-400">Status:</span> ${err.message || 'Bluetooth connection canceled or failed.'}`;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
